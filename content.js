@@ -3,6 +3,11 @@ const CURRENCY_PATTERN =
 const TRAILING_CURRENCY_PATTERN =
   /\d[\d,.\s]*\s?(?:[$€£¥₹₩₽₺₫₪₱฿₴₦₲₵₡₭₮₨₸₼₥₧₯₠₢₣₤]|USD|EUR|GBP|JPY|CAD|AUD|NZD|CHF|CNY|RMB|HKD|SGD|SEK|NOK|DKK)/gi;
 
+const COMBINED_PATTERN = new RegExp(
+  `(${CURRENCY_PATTERN.source})|(${TRAILING_CURRENCY_PATTERN.source})`,
+  "gi"
+);
+
 const SKIP_TAGS = new Set([
   "SCRIPT",
   "STYLE",
@@ -12,6 +17,28 @@ const SKIP_TAGS = new Set([
   "SELECT",
   "OPTION"
 ]);
+
+// inject CSS to handle the visual masking (non-destructive)
+function injectStyles() {
+  if (document.getElementById("price-hider-styles")) {
+    return;
+  }
+  const style = document.createElement("style");
+  style.id = "price-hider-styles";
+  style.textContent = `
+    [data-price-hider-original] {
+      font-size: 0 !important;
+      visibility: hidden !important;
+    }
+    [data-price-hider-original]::before {
+      content: "•••";
+      font-size: initial !important;
+      font-size: 1rem !important;
+      visibility: visible !important;
+    }
+  `;
+  (document.head || document.documentElement).appendChild(style);
+}
 
 function shouldSkipTextNode(textNode) {
   const parent = textNode.parentElement;
@@ -23,15 +50,17 @@ function shouldSkipTextNode(textNode) {
     return true;
   }
 
+  // skip if already processed
+  if (parent.hasAttribute("data-price-hider-original")) {
+    return true;
+  }
+
   return Boolean(parent.closest("[data-price-hider-ignore]"));
 }
 
-function maskPricesInText(text) {
-  const masked = text
-    .replace(CURRENCY_PATTERN, "•••")
-    .replace(TRAILING_CURRENCY_PATTERN, "•••");
-
-  return masked;
+function hasPriceMatch(text) {
+  COMBINED_PATTERN.lastIndex = 0;
+  return COMBINED_PATTERN.test(text);
 }
 
 function maskTextNode(textNode) {
@@ -48,10 +77,38 @@ function maskTextNode(textNode) {
     return;
   }
 
-  const masked = maskPricesInText(original);
-  if (masked !== original) {
-    textNode.textContent = masked;
+  if (!hasPriceMatch(original)) {
+    return;
   }
+
+  // wrap prices in spans with data attributes, so
+  // the original text is preserved; CSS handles the visual masking
+  const fragment = document.createDocumentFragment();
+  let lastIndex = 0;
+
+  COMBINED_PATTERN.lastIndex = 0;
+  let match;
+  while ((match = COMBINED_PATTERN.exec(original)) !== null) {
+    if (match.index > lastIndex) {
+      fragment.appendChild(
+        document.createTextNode(original.slice(lastIndex, match.index))
+      );
+    }
+
+    // create a span that preserves the original price in DOM
+    const span = document.createElement("span");
+    span.setAttribute("data-price-hider-original", match[0]);
+    span.textContent = match[0];
+    fragment.appendChild(span);
+
+    lastIndex = COMBINED_PATTERN.lastIndex;
+  }
+
+  if (lastIndex < original.length) {
+    fragment.appendChild(document.createTextNode(original.slice(lastIndex)));
+  }
+
+  textNode.parentNode.replaceChild(fragment, textNode);
 }
 
 function walkAndMask(root) {
@@ -96,5 +153,6 @@ function observeMutations() {
   });
 }
 
+injectStyles();
 maskExistingPage();
 observeMutations();
