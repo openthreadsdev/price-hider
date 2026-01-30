@@ -1,0 +1,16 @@
+{
+  "name": "price-hider",
+  "version": "1.0.0",
+  "description": "Hide prices on websites",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "build": "bash build.sh"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}

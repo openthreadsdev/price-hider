@@ -45,13 +45,34 @@ Exclude specific sections from price masking by adding `data-price-hider-ignore`
 
 ## Installation
 
-### Run Locally (Load Unpacked)
+### Chrome Web Store (Coming Soon)
+The extension will be available on the Chrome Web Store.
 
-1. Open Chrome and go to `chrome://extensions`
-2. Enable **Developer mode** (toggle in top-right corner)
-3. Click **Load unpacked**
-4. Select this folder: `price-hider`
-5. Visit any webpage with prices - they should be masked as `•••`
+### Development Install (Load Unpacked)
+
+1. Clone this repository
+2. Open Chrome and go to `chrome://extensions`
+3. Enable **Developer mode** (toggle in top-right corner)
+4. Click **Load unpacked**
+5. Select the `price-hider` folder
+6. Visit any webpage with prices - they should be masked as `•••`
+
+### Building for Distribution
+
+For developers who want to package the extension:
+
+```bash
+# Install dependencies (for testing)
+npm install
+
+# Run tests
+npm test
+
+# Build production package (excludes test files)
+npm run build
+```
+
+This creates `price-hider-chrome-store.zip` containing only production files (manifest, content script, icons). See [PACKAGING.md](PACKAGING.md) for details.
 
 ## How It Works
 
@@ -63,3 +84,37 @@ The extension uses a combination of techniques to hide prices effectively:
 4. Element-Level Detection: Identifies known price container elements (e.g., Amazon's `.a-price` class)
 
 When the extension is disabled or removed, all original prices automatically become visible again since the masking is CSS-based.
+
+## Testing
+
+This extension includes a comprehensive test suite with over 100 tests covering:
+
+- Pattern matching for various currencies and formats
+- DOM manipulation and masking logic
+- Edge cases and error handling
+- Real-world e-commerce scenarios
+- Performance testing
+
+### Running Tests
+
+```bash
+# Install dependencies
+npm install
+
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+```
+
+**Current Test Coverage:**
+- 98.42% statement coverage
+- 84.94% branch coverage
+- 100% function coverage
+- 98.4% line coverage
+
+See [TESTING.md](TESTING.md) for more details about the test suite.

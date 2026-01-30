@@ -335,8 +335,34 @@ function init() {
 }
 
 // ensure DOM is ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
+if (typeof document !== 'undefined') {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+}
+
+// export functions for testing (Node.js environment)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    CURRENCY_PATTERN,
+    TRAILING_CURRENCY_PATTERN,
+    COMBINED_PATTERN,
+    SKIP_TAGS,
+    CURRENCY_SYMBOLS,
+    CURRENCY_CODES,
+    SKIP_CONTAINER_TAGS,
+    injectStyles,
+    looksLikePrice,
+    isPriceContainer,
+    shouldSkipTextNode,
+    hasPriceMatch,
+    maskTextNode,
+    maskPriceElements,
+    walkAndMask,
+    maskExistingPage,
+    observeMutations,
+    init
+  };
 }
