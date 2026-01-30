@@ -18,7 +18,10 @@ const SKIP_TAGS = new Set([
   "OPTION"
 ]);
 
-// inject CSS to handle the visual masking (non-destructive)
+// Inject CSS to handle the visual masking (non-destructive)
+// When extension is disabled, CSS is not injected, so:
+// - Original text becomes visible (no CSS hiding it)
+// - Mask stays hidden (inline style)
 function injectStyles() {
   if (document.getElementById("price-hider-styles")) {
     return;
@@ -26,15 +29,11 @@ function injectStyles() {
   const style = document.createElement("style");
   style.id = "price-hider-styles";
   style.textContent = `
-    [data-price-hider-original] {
-      font-size: 0 !important;
-      visibility: hidden !important;
+    .price-hider-original {
+      display: none !important;
     }
-    [data-price-hider-original]::before {
-      content: "•••";
-      font-size: initial !important;
-      font-size: 1rem !important;
-      visibility: visible !important;
+    .price-hider-mask {
+      display: inline !important;
     }
   `;
   (document.head || document.documentElement).appendChild(style);
@@ -50,8 +49,8 @@ function shouldSkipTextNode(textNode) {
     return true;
   }
 
-  // skip if already processed
-  if (parent.hasAttribute("data-price-hider-original")) {
+  // Skip if already processed
+  if (parent.hasAttribute("data-price-hider") || parent.closest("[data-price-hider]")) {
     return true;
   }
 
@@ -81,8 +80,9 @@ function maskTextNode(textNode) {
     return;
   }
 
-  // wrap prices in spans with data attributes, so
-  // the original text is preserved; CSS handles the visual masking
+  // Non-destructive approach: create two elements for each price
+  // 1. Original text (hidden by CSS when extension is enabled)
+  // 2. Mask text (hidden by inline style, shown by CSS when extension is enabled)
   const fragment = document.createDocumentFragment();
   let lastIndex = 0;
 
@@ -95,11 +95,24 @@ function maskTextNode(textNode) {
       );
     }
 
-    // create a span that preserves the original price in DOM
-    const span = document.createElement("span");
-    span.setAttribute("data-price-hider-original", match[0]);
-    span.textContent = match[0];
-    fragment.appendChild(span);
+    // Wrapper span to keep original and mask together
+    const wrapper = document.createElement("span");
+    wrapper.setAttribute("data-price-hider", "");
+
+    // Original price - visible by default, hidden by injected CSS
+    const originalSpan = document.createElement("span");
+    originalSpan.className = "price-hider-original";
+    originalSpan.textContent = match[0];
+    wrapper.appendChild(originalSpan);
+
+    // Mask - hidden by default (inline style), shown by injected CSS
+    const maskSpan = document.createElement("span");
+    maskSpan.className = "price-hider-mask";
+    maskSpan.style.display = "none"; // Hidden when CSS is not present
+    maskSpan.textContent = "•••";
+    wrapper.appendChild(maskSpan);
+
+    fragment.appendChild(wrapper);
 
     lastIndex = COMBINED_PATTERN.lastIndex;
   }
