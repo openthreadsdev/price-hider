@@ -1,44 +1,65 @@
 # Price Hider Chrome Extension
 
-This Chrome extension hides prices on the current page by masking currency amounts in text content. It works on static and dynamically updated pages.
+This Chrome extension hides prices on webpages by masking currency amounts in text content. It works on static and dynamically updated pages, providing a clean browsing experience without distracting price information.
 
-## Run locally (Load unpacked)
+## Features
 
-1. Open Chrome and go to `chrome://extensions`.
-2. Enable **Developer mode** (top-right).
-3. Click **Load unpacked**.
-4. Select this folder: `price-hider`.
-5. Visit any webpage with prices. The prices should be masked as `•••`.
+### Multi-Currency Support
 
-If you want to ignore a section of the page, add `data-price-hider-ignore` to a
-parent element.
+Automatically detects and hides prices in multiple currencies and formats:
+- Symbols: $, €, £, ¥, ₹, ₩, ₽, ₺, ₫, ₪, ₱, ฿, ₴, ₦, ₲, ₵, ₡, ₭, ₮, ₨, ₸, ₼, ₥, ₧, ₯, ₠, ₢, ₣, ₤
+- Currency codes: USD, EUR, GBP, JPY, CAD, AUD, NZD, CHF, CNY, RMB, HKD, SGD, SEK, NOK, DKK
+- Handles both prefix format (`$100`) and suffix format (`100€`)
+- Supports various number formats (commas, periods, spaces as separators)
 
-## Publish to the Chrome Web Store
+### Smart Detection
 
-1. Create a Chrome Web Store developer account and pay the one-time fee:
-   <https://chrome.google.com/webstore/devconsole/>
-2. Prepare required assets:
-   - Extension icons: `16x16`, `48x48`, `128x128` PNGs.
-   - Screenshots: at least one `1280x800` (or `640x400`) PNG.
-   - Optional promo tiles for featured placement.
-   - A short privacy policy if you collect data (this extension does not).
-3. Add icons and update `manifest.json`:
+- Text-based masking: Automatically finds and masks prices in any text content
+- Site-specific optimizations: Enhanced support for popular sites like Amazon with special price element handling
+- Non-destructive approach: Original price data is preserved in the DOM and only visually hidden using CSS
+- Dynamic content support: Automatically detects and masks prices added after page load via AJAX/SPA updates
 
-```json
-{
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  }
-}
+### Selective Ignoring
+
+Exclude specific sections from price masking by adding `data-price-hider-ignore` to any parent element:
+
+```html
+<div data-price-hider-ignore>
+  <!-- prices here won't be masked -->
+  <p>Sale: $50.00</p>
+</div>
 ```
 
-4. Zip the extension files:
-   - Include: `manifest.json`, `content.js`, and `icons/` (if added).
-   - Exclude: `.git`, `.DS_Store`, and any tooling files not needed at runtime.
-5. Upload the zip in the Developer Console, fill in the listing details, and
-   submit for review.
+### Privacy-Focused
 
-After approval, the listing will go live, and updates can be published by
-uploading a new zip with a higher `version` in `manifest.json`.
+- No data collection
+- No external network requests
+- All processing happens locally in your browser
+- No permissions beyond content script injection
+
+### Performance
+
+- Efficient DOM traversal and mutation observation
+- Skips non-relevant elements (scripts, styles, inputs, etc.)
+- Minimal performance impact on page load and rendering
+
+## Installation
+
+### Run Locally (Load Unpacked)
+
+1. Open Chrome and go to `chrome://extensions`
+2. Enable **Developer mode** (toggle in top-right corner)
+3. Click **Load unpacked**
+4. Select this folder: `price-hider`
+5. Visit any webpage with prices - they should be masked as `•••`
+
+## How It Works
+
+The extension uses a combination of techniques to hide prices effectively:
+
+1. Pattern Matching: Sophisticated regex patterns detect various price formats
+2. CSS Masking: Prices are wrapped in spans and visually replaced with `•••` using CSS
+3. Mutation Observer: Monitors the page for dynamic content changes
+4. Element-Level Detection: Identifies known price container elements (e.g., Amazon's `.a-price` class)
+
+When the extension is disabled or removed, all original prices automatically become visible again since the masking is CSS-based.
